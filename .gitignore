@@ -1,6 +1,9 @@
 .vscode
 .ipynb_checkpoints
+__pycache__
 
 data
 
 secrets.py
+CREDENTIALS_PICKLE_FILE
+client_secret*
