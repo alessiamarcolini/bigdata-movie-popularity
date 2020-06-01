@@ -1,9 +1,16 @@
-from secrets import OMDB_API_KEY_fallback
+from secrets import OMDB_API_KEY, OMDB_API_KEY_fallback
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as t
+from omdb import OMDBClient
+from requests.exceptions import HTTPError
 
-from schemas import schema_actors, schema_omdb_data
+from omdb_schemas import (
+    requested_flat_fields,
+    requested_nested_fields,
+    schema_omdb_data,
+)
+from utils import to_snake_case
 
 # ----------------------
 # PREPROCESSING OPUSDATA
@@ -24,13 +31,10 @@ def success(arguments):
 # ---------------------------
 
 
-def format_source(source):
-    return "_".join(source.split()).lower()
-
-
 @F.udf(returnType=schema_omdb_data)
 def omdb_data(arguments):
     movie_name, year = arguments
+    client = OMDBClient(apikey=OMDB_API_KEY)
     try:
         result = client.get(title=movie_name, year=year, fullplot=True, tomatoes=True)
     except HTTPError as e:
@@ -58,14 +62,14 @@ def omdb_data(arguments):
 
                     if source in requested_nested_list:
 
-                        source_formatted = format_source(source)
+                        source_formatted = to_snake_case(source)
                         key = f"{nested_field}_{source_formatted}"
 
                         result_to_keep[key] = value
 
             requested_sources = requested_nested_fields[nested_field]
             for requested_source in requested_sources:
-                source_formatted = format_source(requested_source)
+                source_formatted = to_snake_case(requested_source)
                 key = f"{nested_field}_{source_formatted}"
                 if not key in result_to_keep:
                     result_to_keep[key] = None
@@ -73,7 +77,7 @@ def omdb_data(arguments):
         else:
             requested_sources = requested_nested_fields[nested_field]
             for requested_source in requested_sources:
-                source_formatted = format_source(requested_source)
+                source_formatted = to_snake_case(requested_source)
                 key = f"{nested_field}_{source_formatted}"
                 result_to_keep[key] = None
 
@@ -120,16 +124,3 @@ def nominated_by_keyword(awards_str, award_name):
         n_nominated = 0
 
     return n_nominated
-
-
-@F.udf(returnType=schema_actors)
-def encode_authors(actors_str):
-    actors = [a.strip().lower() for a in actors_str.split(",")]
-
-    ids = []
-    for a in actors:
-        ids.append(actors_id_dict[a])
-
-    ids = sorted(ids) + (4 - len(ids)) * [None]
-
-    return t.Row("actor_id_0", "actor_id_1", "actor_id_2", "actor_id_3")(*ids)

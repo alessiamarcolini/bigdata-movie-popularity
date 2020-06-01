@@ -1,23 +1,17 @@
 import os
-from secrets import HADOOP_NAMENODE, HADOOP_USER_NAME, OMDB_API_KEY, SPARK_URI
+from secrets import HADOOP_NAMENODE, HADOOP_USER_NAME, SPARK_URI
 
 import omdb
 import pyspark
 import pyspark.sql.functions as F
 import pyspark.sql.types as t
 from hdfs import InsecureClient
-from omdb import OMDBClient
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
-from requests.exceptions import HTTPError
 
-from udfs import (
-    encode_authors,
-    general_awards_by_keyword,
-    nominated_by_keyword,
-    omdb_data,
-    won_by_keyword,
-)
+from omdb_schemas import schema_actors
+from udfs import (general_awards_by_keyword, nominated_by_keyword, omdb_data,
+                  won_by_keyword)
 
 os.environ["HADOOP_USER_NAME"] = HADOOP_USER_NAME
 
@@ -32,6 +26,10 @@ filename = [f for f in client_hdfs.list(hdfs_path) if f.endswith(".csv")][0]
 
 
 sc = SparkContext(SPARK_URI)
+
+parent_dir = os.path.dirname(os.path.abspath(__file__))
+sc.addPyFile(os.path.join(parent_dir, "utils.py"))
+
 sparkSession = (
     SparkSession.builder.appName("preprocessing-opusdata-and-omdb")
     .config("spark.hadoop.dfs.client.use.datanode.hostname", "true")
@@ -48,23 +46,6 @@ opusdata = sparkSession.read.csv(
 
 
 opusdata.show()
-
-
-omdb.set_default("apikey", OMDB_API_KEY)
-client = OMDBClient(apikey=OMDB_API_KEY)
-
-requested_flat_fields = [
-    "runtime",
-    "director",
-    "actors",
-    "country",
-    "awards",
-    "imdb_votes",
-    "imdb_id",
-]
-requested_nested_fields = {
-    "ratings": ["Internet Movie Database", "Rotten Tomatoes", "Metacritic"]
-}
 
 
 opusdata_omdb = opusdata.withColumn(
@@ -161,6 +142,19 @@ for i, row in enumerate(opusdata_votes.rdd.collect()):
 
 
 actors_id_dict = {actor: i for i, actor in enumerate(unique_actors)}
+
+
+@F.udf(returnType=schema_actors)
+def encode_authors(actors_str):
+    actors = [a.strip().lower() for a in actors_str.split(",")]
+
+    ids = []
+    for a in actors:
+        ids.append(actors_id_dict[a])
+
+    ids = sorted(ids) + (4 - len(ids)) * [None]
+
+    return t.Row("actor_id_0", "actor_id_1", "actor_id_2", "actor_id_3")(*ids)
 
 
 opusdata_actors = opusdata_votes.withColumn(
