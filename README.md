@@ -43,7 +43,7 @@ hadoop-namenode$ bash ~/utils/format-namenode.sh
 
 Execute the following commands as `root`:
 ```bash
-$ service hadoop start
-$ service hadoop stop
-$ service hadoop start
+hadoop-namenode$ service hadoop start
+hadoop-namenode$ service hadoop stop
+hadoop-namenode$ service hadoop start
 ```
