@@ -80,5 +80,5 @@ $ conda upgrade -y --all
 ```bash
 $ git clone https://github.com/alessiamarcolini/bigdata-movie-popularity.git
 $ cd bigdata-movie-popularity
-$ conda env create -f env-yml
+$ conda env create -f env.yml
 ```
