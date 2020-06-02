@@ -5,7 +5,7 @@ import pyspark.sql.types as t
 from omdb import OMDBClient
 from requests.exceptions import HTTPError
 
-from omdb_schemas import (
+from schemas.omdb import (
     requested_flat_fields,
     requested_nested_fields,
     schema_omdb_data,

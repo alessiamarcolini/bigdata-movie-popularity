@@ -9,9 +9,13 @@ from hdfs import InsecureClient
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 
-from omdb_schemas import schema_actors
-from udfs import (general_awards_by_keyword, nominated_by_keyword, omdb_data,
-                  won_by_keyword)
+from schemas.omdb import schema_actors
+from udfs import (
+    general_awards_by_keyword,
+    nominated_by_keyword,
+    omdb_data,
+    won_by_keyword,
+)
 
 os.environ["HADOOP_USER_NAME"] = HADOOP_USER_NAME
 
