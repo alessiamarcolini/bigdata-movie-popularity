@@ -31,10 +31,17 @@ t1 = BashOperator(
 )
 
 t2 = BashOperator(
-    task_id="rf_train",
+    task_id="preprocess_youtube",
     depends_on_past=True,
-    bash_command=f"python {project_folder}/movie_popularity/opusdata_ombd_rf_train_baseline.py",
+    bash_command=f"python {project_folder}/movie_popularity/preprocessing_youtube.py",
     dag=dag,
 )
 
-t1 >> t2
+t3 = BashOperator(
+    task_id="rf_train",
+    depends_on_past=True,
+    bash_command=f"python {project_folder}/movie_popularity/rf_train.py",
+    dag=dag,
+)
+
+[t1, t2] >> t3
