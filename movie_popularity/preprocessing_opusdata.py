@@ -36,7 +36,7 @@ opusdata_filter_0 = opusdata_filter_0.filter(
 )
 
 opusdata_dropped = opusdata_filter_0.drop(
-    "movie_odid", "running_time", "production_method", "creative_type", "source"
+    "running_time", "production_method", "creative_type", "source"
 )
 
 opusdata_years = opusdata_dropped.filter(opusdata_dropped["production_year"] >= 2010)
@@ -52,6 +52,8 @@ opusdata_total_box_office = opusdata_distinct.withColumn(
 
 opusdata_droppped_na = opusdata_total_box_office.na.drop(subset=["genre", "sequel"])
 
+opusdata_rename_id = opusdata_droppped_na.withColumnRenamed("movie_odid", "_id")
+
 
 # ### Get "success" [1]
 # [1] _Rhee, Travis Ginmu, and Farhana Zulkernine.
@@ -62,7 +64,7 @@ opusdata_droppped_na = opusdata_total_box_office.na.drop(subset=["genre", "seque
 # Profit = (1⁄2 * total_box_office) – production_budget
 
 
-opusdata_success = opusdata_droppped_na.withColumn(
+opusdata_success = opusdata_rename_id.withColumn(
     "success", success(F.array("total_box_office", "production_budget"))
 )
 

@@ -137,10 +137,10 @@ print(feat_importances)
 
 
 predictions_train_clean = predictions_train.select(
-    "movie_name", "imdb_id", predictions_train["prediction"].cast("integer")
+    "_id", "movie_name", "imdb_id", predictions_train["prediction"].cast("integer")
 )
 predictions_test_clean = predictions_test.select(
-    "movie_name", "imdb_id", predictions_test["prediction"].cast("integer")
+    "_id", "movie_name", "imdb_id", predictions_test["prediction"].cast("integer")
 )
 
 predictions_clean = predictions_train_clean.unionByName(predictions_test_clean)
