@@ -1,10 +1,14 @@
-name: movie_popularity
+name: movie_popularity_dev
 channels:
   - conda-forge
   - defaults
 dependencies:
   - python=3.7
+  - ipykernel=5.3.0
+  - notebook=6.0.3
   - pyspark=2.4.5
+  - black=19.10b0
+  - jupyter=1.0.0
   - airflow=1.10.10
   - pip=20.1.1
   - pip:
