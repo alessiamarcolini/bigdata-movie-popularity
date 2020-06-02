@@ -22,7 +22,7 @@ os.environ["HADOOP_USER_NAME"] = HADOOP_USER_NAME
 client_hdfs = InsecureClient(f"http://{HADOOP_NAMENODE}:50070", user=HADOOP_USER_NAME)
 
 # get preprocessed opusdata filename
-hdfs_path = "/processed/opusdata_omdb.csv"
+hdfs_path = "/processed/opusdata_omdb_youtube.csv"
 
 filename = [f for f in client_hdfs.list(hdfs_path) if f.endswith(".csv")][0]
 
@@ -75,6 +75,9 @@ feature_cols = [
     "rating_indexed",
     "genre_indexed",
     "country_indexed",
+    "youtube_view_count",
+    "youtube_engagement_score",
+    "youtube_positive_engagement_score",
 ]
 
 assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
