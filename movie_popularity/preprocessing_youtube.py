@@ -1,11 +1,5 @@
 import os
-from secrets import (
-    HADOOP_NAMENODE,
-    HADOOP_USER_NAME,
-    SPARK_URI,
-    YOUTUBE_CLIENT_SECRET_FILENAME,
-    YOUTUBE_CLIENT_SECRET_FILENAME2,
-)
+from secrets import HADOOP_NAMENODE, HADOOP_USER_NAME, SPARK_URI
 
 import google_auth_oauthlib.flow
 import pyspark
@@ -35,6 +29,7 @@ sc = SparkContext(SPARK_URI)
 
 parent_dir = os.path.dirname(os.path.abspath(__file__))
 sc.addPyFile(os.path.join(parent_dir, "youtube_utils.py"))
+sc.addPyFile(os.path.join(parent_dir, "secrets.py"))
 # sc.addPyFile('/home/utente/bigdata-movie-popularity/movie_popularity/youtube_utils.py')
 
 sparkSession = (
@@ -69,28 +64,26 @@ api_version = "v3"
 @F.udf(returnType=t.StringType())
 def id_from_title(movie_name):
     youtube = youtube_utils.get_authenticated_service(
-        api_service_name, api_version, scopes, YOUTUBE_CLIENT_SECRET_FILENAME
+        api_service_name, api_version, scopes, n_tries=0
     )
 
-    try:
-        request = youtube.search().list(
-            part="snippet", q=f"{movie_name} official trailer"
-        )
-        response = request.execute()
+    n_tries = 0
+    success = False
+    while not success and n_tries < 5:
+        try:
+            request = youtube.search().list(
+                part="snippet", q=f"{movie_name} official trailer"
+            )
+            response = request.execute()
+            success = True
 
-    except HttpError as e:
-
-        youtube = youtube_utils.get_authenticated_service(
-            api_service_name,
-            api_version,
-            scopes,
-            YOUTUBE_CLIENT_SECRET_FILENAME2,
-            first=False,
-        )
-        request = youtube.search().list(
-            part="snippet", q=f"{movie_name} official trailer"
-        )
-        response = request.execute()
+        except HttpError as e:
+            n_tries += 1
+            youtube = youtube_utils.get_authenticated_service(
+                api_service_name, api_version, scopes, n_tries=n_tries,
+            )
+    if not success:
+        return None
 
     available_videos = response["items"]
 
@@ -110,7 +103,6 @@ opusdata_youtube = opusdata_omdb.withColumn(
     "youtube_video_id", id_from_title("movie_name")
 )
 
-
 opusdata_youtube.show()
 
 
@@ -118,30 +110,39 @@ opusdata_youtube.show()
 def stats_from_id(video_id):
     if not video_id:
         return None, None, None
-    try:
-        request = youtube.videos().list(part="statistics", id=video_id)
-        response = request.execute()
 
+    youtube = youtube_utils.get_authenticated_service(
+        api_service_name, api_version, scopes, n_tries=0
+    )
+
+    n_tries = 0
+    success = False
+    while not success and n_tries < 5:
         try:
-            stats = response["items"][0]["statistics"]
+            request = youtube.videos().list(part="statistics", id=video_id)
+            response = request.execute()
+            success = True
 
-            view_count = int(stats["viewCount"])
-            like_count = int(stats["likeCount"])
-            dislike_count = int(stats["dislikeCount"])
+        except HttpError as e:
+            n_tries += 1
+            youtube = youtube_utils.get_authenticated_service(
+                api_service_name, api_version, scopes, n_tries=n_tries,
+            )
+    if not success:
+        return None, None, None
 
-            engagement_score = (like_count + dislike_count) / view_count
-            positive_engagement_score = like_count / dislike_count
+    try:
+        stats = response["items"][0]["statistics"]
 
-        except KeyError as e:
-            return None, None, None
-    except HttpError as e:
-        flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
-            YOUTUBE_CLIENT_SECRET_FILENAME2, scopes
-        )
+        view_count = int(stats["viewCount"])
+        like_count = int(stats["likeCount"])
+        dislike_count = int(stats["dislikeCount"])
 
-        youtube = youtube_utils.get_authenticated_service(
-            api_service_name, api_version, scopes, YOUTUBE_CLIENT_SECRET_FILENAME2
-        )
+        engagement_score = (like_count + dislike_count) / view_count
+        positive_engagement_score = like_count / dislike_count
+
+    except KeyError as e:
+        return None, None, None
 
     return t.Row(
         "youtube_view_count",
