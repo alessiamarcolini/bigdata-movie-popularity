@@ -32,7 +32,6 @@ t1 = BashOperator(
 
 t2 = BashOperator(
     task_id="preprocess_youtube",
-    depends_on_past=True,
     bash_command=f"python {project_folder}/movie_popularity/preprocessing_youtube.py",
     dag=dag,
 )
@@ -44,4 +43,4 @@ t3 = BashOperator(
     dag=dag,
 )
 
-[t1, t2] >> t3
+t3.set_upstream([t1, t2])
