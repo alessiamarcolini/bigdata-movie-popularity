@@ -55,6 +55,7 @@ $ wget https://mirror.nohup.it/apache/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.
 $ tar zxvf spark-2.4.5-bin-hadoop2.7.tgz -C ~/
 
 $ echo 'export SPARK_HOME=$HOME/spark-2.4.5-bin-hadoop2.7' >> ~/.bashrc
+$ source ~/.bashrc
 ```
 
 ### Install MongoDB
