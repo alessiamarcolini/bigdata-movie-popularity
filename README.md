@@ -81,4 +81,33 @@ $ conda upgrade -y --all
 $ git clone https://github.com/alessiamarcolini/bigdata-movie-popularity.git
 $ cd bigdata-movie-popularity
 $ conda env create -f env.yml
+$ conda activate bigdata
+```
+
+#### Setup Airflow
+Start Airflow Webserver and Scheduler (in two tmux sessions or in separate shells):
+```bash
+$ airflow webserver -p 9999
+$ airflow scheduler
+```
+
+Copy pipeline file into the Airflow default dags directory:
+```bash
+$ cp airflow_pipeline.py ~/airflow/dags
+```
+
+Verify Airflow is able to read the file and compute the dag:
+```bash
+$ airflow list_tasks bigdata-movie_popularity --tree 
+```
+
+## Upload OpusData file on HDFS
+```bash
+$ python movie_popularity/hdfs_upload_opusdata.py path/to/opusdata.csv
+```
+
+## Start Eve
+```bash
+$ cd movie_popularity
+$ python eve_run.py
 ```
