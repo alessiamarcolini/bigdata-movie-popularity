@@ -10,6 +10,7 @@ Tested on Ubuntu 18.04 LTS.
 $ sudo apt update
 $ sudo apt install openjdk-8-jre-headless
 $ echo 'export JAVA_HOME="/usr"' >> ~/.bashrc
+$ source ~/.bashrc
 ```
 
 ### Install Scala
