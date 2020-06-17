@@ -69,7 +69,7 @@ def id_from_title(movie_name):
 
     n_tries = 0
     success = False
-    while not success and n_tries < 5:
+    while not success and n_tries < 19:
         try:
             request = youtube.search().list(
                 part="snippet", q=f"{movie_name} official trailer"
@@ -117,7 +117,7 @@ def stats_from_id(video_id):
 
     n_tries = 0
     success = False
-    while not success and n_tries < 5:
+    while not success and n_tries < 19:
         try:
             request = youtube.videos().list(part="statistics", id=video_id)
             response = request.execute()
