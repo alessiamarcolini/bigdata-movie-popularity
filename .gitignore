@@ -5,5 +5,5 @@ __pycache__
 data
 
 secrets.py
-CREDENTIALS_PICKLE_FILE
-client_secret*
+CREDENTIALS_PICKLE_FILE*
+*client_secret*
