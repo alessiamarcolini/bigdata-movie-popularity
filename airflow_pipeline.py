@@ -43,4 +43,5 @@ t3 = BashOperator(
     dag=dag,
 )
 
-t3.set_upstream([t1, t2])
+t1 >> t2
+t2 >> t3
